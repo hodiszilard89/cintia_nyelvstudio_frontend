@@ -11,12 +11,16 @@ async function generateMp3() {
   const client = new textToSpeech.TextToSpeechClient();
 
   // A szöveg, amit fel akarunk olvasni
-  const text = 'I went to the cinema with my friends yesterday.';
+  const text = 'I have already done my homework.';
 
   const request = {
     input: { text: text },
     // Beállítjuk a nyelvet és a prémium Neural2 hangot
-    voice: { languageCode: 'en-GB', name: 'en-GB-Neural2-A' },
+voice: { 
+    languageCode: 'en-GB', 
+    name: 'en-GB-Neural2-B'    // <--- Cseréld ki a nevet egy brit női hangra
+    // (Férfi brit hanghoz használd ezt: 'en-GB-Neural2-B' vagy 'en-GB-Neural2-D')
+  },
     // Kérjük, hogy MP3 formátumban adja vissza
     audioConfig: { audioEncoding: 'MP3' },
   };
