@@ -6,8 +6,7 @@ import {
   Box, Flex, VStack, Heading, Text, Button, Divider,
   Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon,
   IconButton, HStack, Circle, List, ListItem, ListIcon,
-  RadioGroup, Radio, Stack, Badge, Input,
-  Textarea, Spinner, Tooltip, ButtonGroup, SimpleGrid
+  RadioGroup, Radio, Stack, Badge, Input, ButtonGroup, SimpleGrid
 } from '@chakra-ui/react';
 import { useVocabulary } from '../hooks/useVocabulary'
 import { BookViewer } from './BookViewer';
@@ -17,8 +16,13 @@ import { FiVolume2, FiChevronLeft, FiChevronRight, FiCheckCircle } from 'react-i
 import { useBookAudio } from '../hooks/useBookAudio';
 import { useBookPage } from '../hooks/useBookPages';
 import { formatTime, shuffleArray, speakEnglish } from '../utils';
-import { FlipCard } from './FlipCard';
+import { FlipCard as FlipCard2 } from './FlipCard_2';
+import { FlashCard } from './FlashCard';
 import { SidebarButton } from './SidebarButton';
+import { useEssay } from '../hooks/useEssay';
+import { EssayEditor } from './EssayEditor';
+import { ChoiceButton } from './ModeChoice';
+import type { MachGameWord } from '../types';
 
 // Egyetlen független kártya, ami a saját forgását kezeli
 
@@ -27,7 +31,7 @@ export const UnitPage = () => {
   const { id } = useParams<{ id: string }>();
   const lessonId = Number(id) || 1;
   // 1. A memóriában ott van a lecke összes hanganyaga (pl. 15 darab mp3 adat)
-  const { audios, ba_loading, ba_error } = useBookAudio(lessonId);
+  const { audios } = useBookAudio(lessonId);
   const { pages } = useBookPage(lessonId);
 
 
@@ -77,7 +81,7 @@ export const UnitPage = () => {
   // A 'match' lesz a párosító játékunk
   const [vocabMode, setVocabMode] = useState<'list' | 'flashcard' | 'match'>('list');
   // --- PÁROSÍTÓ JÁTÉK ÁLLAPOTAI ---
-  const [gameCards, setGameCards] = useState<any[]>([]); // A játék 40 (vagy kevesebb) kártyája
+  const [gameCards, setGameCards] = useState<MachGameWord[]>([]); // A játék 40 (vagy kevesebb) kártyája
   const [selectedCards, setSelectedCards] = useState<string[]>([]); // Az épp kiválasztott 1 vagy 2 kártya ID-ja
 
   // Játék indítása / Újrakeverés
@@ -85,11 +89,10 @@ export const UnitPage = () => {
     if (!words || words.length === 0) return;
 
     // Maximum 20 szót választunk ki véletlenszerűen
-    const shuffledWords = shuffleArray(words).slice(0, 20);
+    const shuffledWords = shuffleArray(words).slice(0, 20)
 
-    const newCards: any[] = [];
+    const newCards: MachGameWord[] = [];
     shuffledWords.forEach(word => {
-      // Minden szóhoz csinálunk két kártyát: egy angolt és egy magyart
       newCards.push({ id: `en-${word.id}`, text: word.enWord, type: 'en', wordId: word.id, isMatched: false });
       newCards.push({ id: `hu-${word.id}`, text: word.huTranslation, type: 'hu', wordId: word.id, isMatched: false });
     });
@@ -266,10 +269,7 @@ export const UnitPage = () => {
   const [score, setScore] = useState(0);
 
   // Fogalmazás állapotok
-  const [essayText, setEssayText] = useState("");
-  const [isEvaluating, setIsEvaluating] = useState(false);
-  const [essayFeedback, setEssayFeedback] = useState<Array<{ text: string, status: 'ok' | 'error', correction?: string, explanation?: string }> | null>(null);
-
+  const essayLogic = useEssay();
 
   const grammarSlides = [
     {
@@ -339,22 +339,6 @@ export const UnitPage = () => {
     setScore(0);
   };
 
-  const handleEvaluateEssay = () => {
-    if (essayText.trim().length < 10) return;
-    setIsEvaluating(true);
-    setTimeout(() => {
-      setEssayFeedback([
-        { text: "My name is Rafael and I ", status: "ok" },
-        { text: "have 30 years", status: "error", correction: "am 30 years old", explanation: "Angolban a 'to be' (létige) használatos az életkor kifejezésére." },
-        { text: ". I want to learn English ", status: "ok" },
-        { text: "for my job", status: "error", correction: "because of my job", explanation: "Ebben a kontextusban a 'because of' természetesebb a motiváció kifejezésére." },
-        { text: ".", status: "ok" }
-      ]);
-      setIsEvaluating(false);
-    }, 2000);
-  };
-
-
   useEffect(() => {
     // 1. Ha új fülre megyünk, töröljük a belső mondatok pipáit
     setCompletedSentences([]);
@@ -376,7 +360,7 @@ export const UnitPage = () => {
   }, [gameCards]);
   // --- 4. MEGJELENÍTÉS (UI) ---
   return (
-    <Flex w="full" minH="calc(100vh - 100px)" color="white">
+    <Flex w="full" minH="calc(100vh - 200px)" color="white">
 
       {/* --- BAL OLDALI MENÜ SÁV --- */}
       <Box w="280px" bg="blackAlpha.400" p={6} borderRight="1px solid" borderColor="whiteAlpha.300">
@@ -387,35 +371,6 @@ export const UnitPage = () => {
         <Divider borderColor="whiteAlpha.400" mb={6} />
 
         <VStack align="stretch" spacing={3}>
-          {/* ---> ÚJ: Szavak gyűjteménye gomb a bal oldali menübe <--- */}
-          <Button
-            w="100%"
-            justifyContent="flex-start"
-            variant={activeTab === 'vocabulary' ? "solid" : "ghost"}
-            bg={activeTab === 'vocabulary' ? "pink" : "transparent"}
-            color={activeTab === 'vocabulary' ? "white" : "whiteAlpha.800"}
-            colorScheme="pink"
-            onClick={() => setActiveTab('vocabulary')}
-            mb={2}
-          >
-            📚 Szavak gyűjteménye
-          </Button>
-          {/* 1. Nyelvtan Gomb */}
-          <SidebarButton isActive={activeTab === 'grammar'} onClick={() => setActiveTab('grammar')} mt={4} w="100%">
-            Nyelvtan
-          </SidebarButton>
-          <Button
-            variant={activeTab === 'grammar' ? "solid" : "ghost"}
-            bg={activeTab === 'grammar' ? "pink" : "transparent"}
-            color={activeTab === 'grammar' ? "white" : "whiteAlpha.800"}
-            justifyContent="flex-start"
-            _hover={{ bg: activeTab === 'grammar' ? "pink" : "whiteAlpha.200" }}
-            onClick={() => setActiveTab('grammar')}
-          >
-            Nyelvtan (Slides)
-          </Button>
-
-          {/* 2. Könyvek Lenyíló Menü (ACCORDION) */}
           <Accordion allowToggle border="none">
             <AccordionItem border="none">
               <AccordionButton px={4} py={2} borderRadius="md" _hover={{ bg: "whiteAlpha.200" }}>
@@ -426,57 +381,44 @@ export const UnitPage = () => {
               </AccordionButton>
               <AccordionPanel pb={4} pl={6}>
                 <VStack align="stretch" spacing={2}>
-                  <Button
-                    size="sm"
-                    variant={activeTab === 'coursebook' ? "solid" : "ghost"}
-                    bg={activeTab === 'coursebook' ? "pink" : "transparent"}
-                    color={activeTab === 'coursebook' ? "white" : "whiteAlpha.800"}
-                    justifyContent="flex-start"
-                    _hover={{ bg: activeTab === 'coursebook' ? "pink" : "whiteAlpha.200" }}
+                  <SidebarButton isActive={activeTab === 'coursebook'}
                     onClick={() => setActiveTab('coursebook')}
-                  >
-                    📖 Tankönyv
-                  </Button>
-                  <Button
                     size="sm"
-                    variant={activeTab === 'workbook' ? "solid" : "ghost"}
-                    bg={activeTab === 'workbook' ? "pink" : "transparent"}
-                    color={activeTab === 'workbook' ? "white" : "whiteAlpha.800"}
-                    justifyContent="flex-start"
-                    _hover={{ bg: activeTab === 'workbook' ? "pink" : "whiteAlpha.200" }}
+                    w="100%"
+                    justifyContent="flex-start">
+                    📖 Tankönyv
+                  </SidebarButton>
+                  <SidebarButton isActive={activeTab === 'workbook'}
                     onClick={() => setActiveTab('workbook')}
-                  >
+                    size="sm"
+                    w="100%"
+                    justifyContent="flex-start">
                     📝 Munkafüzet
-                  </Button>
+                  </SidebarButton>
                 </VStack>
               </AccordionPanel>
             </AccordionItem>
           </Accordion>
 
-          {/* 3. A többi menüpont dinamikusan (Tesztek, Kiejtés 1-4, Fogalmazás) */}
+
           {[
+            { id: 'vocabulary', label: ' 📚 Szavak gyűjteménye' },
+            { id: 'grammar', label: 'Nyelvtan' },
             { id: 'test', label: 'Teszt & Gyakorlatok' },
-            // Az fix elemek az elején
-
-
-            // Itt a varázslat: Dinamikusan hozzáfűzzük a Kiejtés gombokat!
             ...uniqueTaskNumbers.map(num => ({
               id: `pronunciation${num}`,
               label: `🗣️ Kiejtés ${num}`
             })),
-
-            // És a fix elemek a végén
             { id: 'essay', label: '✍️ Fogalmazás' },
           ].map((item) => (
-            <Button
+
+            <SidebarButton
               key={item.id}
-              variant={activeTab === item.id ? "solid" : "ghost"}
-              bg={activeTab === item.id ? "pink" : "transparent"}
-              color={activeTab === item.id ? "white" : "whiteAlpha.800"}
-              justifyContent="flex-start"
-              _hover={{ bg: activeTab === item.id ? "pink" : "whiteAlpha.200" }}
+              isActive={activeTab === item.id}
               onClick={() => setActiveTab(item.id)}
-            >
+              size="md"
+              w="100%"
+              justifyContent="flex-start">
               {item.label}
 
               {/* ---> ÚJ: Ha az adott menüpont ID-ja benne van a kész listában, kirajzoljuk a zöld pipát! <--- */}
@@ -485,8 +427,8 @@ export const UnitPage = () => {
                   ✓
                 </Text>
               )}
-            </Button>
-          ))}
+            </SidebarButton>)
+          )}
 
         </VStack>
       </Box>
@@ -496,38 +438,22 @@ export const UnitPage = () => {
         {/* ==========================================
     ÚJ ALMENÜ: SZAVAK GYŰJTEMÉNYE
     ========================================== */}
-        {/* ==========================================
-   {/* ==========================================
-    ÚJ ALMENÜ: SZAVAK GYŰJTEMÉNYE
-    ========================================== */}
         {activeTab === 'vocabulary' && (
           <Box animation="fadeIn 0.3s" maxW="900px" mx="auto">
 
             {/* --- ALMENÜ VÁLASZTÓ GOMBOK (Szótár vs. Kártyák) --- */}
             <Flex justify="center" mb={8}>
               <ButtonGroup size="lg" isAttached variant="outline" flexWrap="wrap" justifyContent="center">
-                <Button
-                  onClick={() => setVocabMode('list')}
-                  colorScheme={vocabMode === 'list' ? 'pink' : 'gray'}
-                  variant={vocabMode === 'list' ? 'solid' : 'outline'}
-                >
-                  📖 Szótár (Tanulás)
-                </Button>
-                <Button
-                  onClick={() => setVocabMode('flashcard')}
-                  colorScheme={vocabMode === 'flashcard' ? 'pink' : 'gray'}
-                  variant={vocabMode === 'flashcard' ? 'solid' : 'outline'}
-                >
-                  🗂️ Kártyák (Gyakorlás)
-                </Button>
-                {/* ---> ÚJ GOMB <--- */}
-                <Button
-                  onClick={() => setVocabMode('match')}
-                  colorScheme={vocabMode === 'match' ? 'pink' : 'gray'}
-                  variant={vocabMode === 'match' ? 'solid' : 'outline'}
-                >
-                  🎮 Párosító Játék
-                </Button>
+                {[
+                  { id: 'list', label: '📖 Szótár (Tanulás)' },
+                  { id: 'flashcard', label: ' 🗂️ Kártyák (Gyakorlás)' },
+                  { id: 'match', label: '🎮 Párosító Játék (Tanulás)' }
+                ].map((item) => (
+                  <ChoiceButton
+                    isActive={vocabMode === item.id}
+                    onClick={() => (setVocabMode(item.id as "match" | "list" | "flashcard"))}>
+                    {item.label}
+                  </ChoiceButton>))}
               </ButtonGroup>
             </Flex>
 
@@ -626,7 +552,7 @@ export const UnitPage = () => {
                       {shuffledWords
                         .slice(cardPage * CARDS_PER_PAGE, (cardPage + 1) * CARDS_PER_PAGE)
                         .map((word) => (
-                          <FlipCard
+                          <FlipCard2
                             key={word.id}
                             word={word}
                             speakEnglish={speakEnglish}
@@ -734,32 +660,33 @@ export const UnitPage = () => {
                           const isSelected = selectedCards.includes(card.id);
 
                           return (
-                            <Box
-                              key={card.id}
-                              onClick={() => handleGameCardClick(card.id)}
-                              opacity={card.isMatched ? 0 : 1}
-                              visibility={card.isMatched ? "hidden" : "visible"}
-                              transform={isSelected ? "scale(0.95)" : "scale(1)"}
-                              transition="all 0.2s"
-                              bg={isSelected ? (card.type === 'en' ? "blue.500" : "pink.500") : "whiteAlpha.200"}
-                              color={isSelected ? "white" : "whiteAlpha.900"}
-                              border="2px solid"
-                              borderColor={isSelected ? "whiteAlpha.500" : "transparent"}
-                              borderRadius="lg"
-                              p={4}
-                              cursor={card.isMatched ? "default" : "pointer"}
-                              display="flex"
-                              alignItems="center"
-                              justifyContent="center"
-                              textAlign="center"
-                              minH="80px"
-                              boxShadow={isSelected ? "inner" : "sm"}
-                              _hover={!card.isMatched && !isSelected ? { bg: "whiteAlpha.300" } : {}}
-                            >
-                              <Text fontWeight="bold" fontSize="md" wordBreak="break-word">
-                                {card.text}
-                              </Text>
-                            </Box>
+                            <FlashCard card={card} isSelected={isSelected} onClick={handleGameCardClick} />
+                            // <Box
+                            //   key={card.id}
+                            //   onClick={() => handleGameCardClick(card.id)}
+                            //   opacity={card.isMatched ? 0 : 1}
+                            //   visibility={card.isMatched ? "hidden" : "visible"}
+                            //   transform={isSelected ? "scale(0.95)" : "scale(1)"}
+                            //   transition="all 0.2s"
+                            //   bg={isSelected ? (card.type === 'en' ? "blue.500" : "pink.500") : "whiteAlpha.200"}
+                            //   color={isSelected ? "white" : "whiteAlpha.900"}
+                            //   border="2px solid"
+                            //   borderColor={isSelected ? "whiteAlpha.500" : "transparent"}
+                            //   borderRadius="lg"
+                            //   p={4}
+                            //   cursor={card.isMatched ? "default" : "pointer"}
+                            //   display="flex"
+                            //   alignItems="center"
+                            //   justifyContent="center"
+                            //   textAlign="center"
+                            //   minH="80px"
+                            //   boxShadow={isSelected ? "inner" : "sm"}
+                            //   _hover={!card.isMatched && !isSelected ? { bg: "whiteAlpha.300" } : {}}
+                            // >
+                            //   <Text fontWeight="bold" fontSize="md" wordBreak="break-word">
+                            //     {card.text}
+                            //   </Text>
+                            // </Box>
                           );
                         })}
                       </SimpleGrid>
@@ -1123,38 +1050,7 @@ export const UnitPage = () => {
         )}
         {/* --- FOGALMAZÁS --- */}
         {activeTab === 'essay' && (
-          <Box maxW="800px" mx="auto">
-            <Heading size="lg" mb={2}>Fogalmazás: Bemutatkozás</Heading>
-            <Textarea value={essayText} onChange={(e) => setEssayText(e.target.value)} placeholder="Ide írd..." size="lg" minH="200px" bg="blackAlpha.300" borderColor="whiteAlpha.200" mb={6} isDisabled={isEvaluating || essayFeedback !== null} />
-            {!essayFeedback && (
-              <Flex justify="flex-end">
-                <Button colorScheme="pink" size="lg" onClick={handleEvaluateEssay} isDisabled={essayText.length < 10 || isEvaluating}>
-                  {isEvaluating ? <Spinner size="sm" mr={3} /> : null}
-                  {isEvaluating ? "Az AI dolgozik..." : "Beküldés javításra"}
-                </Button>
-              </Flex>
-            )}
-            {essayFeedback && (
-              <Box mt={8} p={6} bg="whiteAlpha.100" borderRadius="xl" border="1px solid" borderColor="pink.500">
-                <Heading size="md" color="pink.300" mb={4}>Javított verzió</Heading>
-                <Box p={5} bg="blackAlpha.400" borderRadius="md" fontSize="lg" lineHeight="tall">
-                  {essayFeedback.map((chunk, index) => {
-                    if (chunk.status === 'error') {
-                      return (
-                        <Tooltip key={index} label={<VStack align="start" spacing={1} p={2}><Text fontWeight="bold" color="green.300">Javítás: {chunk.correction}</Text><Text fontSize="sm">{chunk.explanation}</Text></VStack>} bg="gray.800" placement="top" hasArrow>
-                          <Text as="span" color="red.300" fontWeight="600" textDecoration="underline" textDecorationStyle="wavy" cursor="help">{chunk.text}</Text>
-                        </Tooltip>
-                      );
-                    }
-                    return <Text as="span" key={index} color="white">{chunk.text}</Text>;
-                  })}
-                </Box>
-                <Flex justify="flex-end" mt={6}>
-                  <Button variant="outline" colorScheme="pink" onClick={() => { setEssayFeedback(null); setEssayText(""); }}>Új fogalmazás</Button>
-                </Flex>
-              </Box>
-            )}
-          </Box>
+          <EssayEditor {...essayLogic} />
         )}
 
       </Box>

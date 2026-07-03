@@ -18,6 +18,15 @@ export interface VocabularyWordDTO {
     audioPath: string | null;
     imageUrl: string | null;
 }
+
+export type MachGameWord={
+  id: string;
+  text: string; 
+  type: string;
+  wordId: number; 
+  isMatched: boolean;
+
+}
 export type BookAudioDTO = {
   id: number;
   lessonId: number;
@@ -45,4 +54,21 @@ export type SidebarButtonProps = ButtonProps & {
   isActive: boolean;
   onClick: () => void;
   children: React.ReactNode;
+};
+
+export type FeedbackSegment = {
+  text: string;
+  status: 'ok' | 'error';
+  correction?: string;
+  explanation?: string;
+};
+
+export type UseEssayReturn = {
+  text: string;
+  setText: React.Dispatch<React.SetStateAction<string>>; // A React useState setter hivatalos típusa
+  isEvaluating: boolean;
+  setIsEvaluating: React.Dispatch<React.SetStateAction<boolean>>;
+  feedback: FeedbackSegment[] | null;
+  setFeedback: React.Dispatch<React.SetStateAction<FeedbackSegment[] | null>>;
+  submitEssay: () => Promise<void>; // Aszinkron függvény, ami nem tér vissza konkrét adattal
 };

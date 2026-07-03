@@ -2,8 +2,6 @@
 import { Button} from '@chakra-ui/react';
 import type { SidebarButtonProps } from '../types';
 
-// Kiterjesztjük a Chakra ButtonProps-t, így minden gomb tulajdonságot is átadhatunk, ha kell
-
 
 export const SidebarButton = ({ isActive, onClick, children, ...rest }: SidebarButtonProps) => {
   return (
