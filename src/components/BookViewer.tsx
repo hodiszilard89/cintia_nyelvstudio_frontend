@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Flex, Text, Image, Button, VStack, Box, Heading } from '@chakra-ui/react';
 import type { BookPageDTO } from '../types';
-// import { BookAudioDTO } from '../types'; // Ha külön fájlban van a típusod
+
 
 interface BookViewerProps {
   title: string;
@@ -23,7 +23,7 @@ console.log(audios)
   // 1. Kiszűrjük az aktuális oldal hanganyagait. 
   // Fontos: A currentPage 0-tól indul (tömb index), de az adatbázisban az oldalszám 1-től (pageNumber)!
   const activeAudios = audios.filter(audio => audio.pageNumber === currentPage + 1);
-  const [playOn, setPlayOn] = useState<boolean>(false)
+ 
 
   return (
     <Flex direction="column" align="center" w="100%">

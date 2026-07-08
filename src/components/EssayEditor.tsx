@@ -8,7 +8,7 @@ export const EssayEditor = ({
   setIsEvaluating,
   feedback,
   setFeedback,
-  submitEssay
+ 
 }: EssayEditorProps) => {
   const handleEvaluateEssay = () => {
     if (text.trim().length < 10) return;

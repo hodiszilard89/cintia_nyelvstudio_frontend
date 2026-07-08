@@ -3,16 +3,12 @@ import {
   ModalBody, ModalCloseButton, useDisclosure, VStack, Text, Box, HStack, Avatar
 } from '@chakra-ui/react';
 import { GoogleLogin } from '@react-oauth/google';
-import { useState } from 'react';
+
 import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom'; // 👈 1. Importáld a navigációt
 import { useAuth } from '../AuthContext';
 
-interface GoogleUser {
-  name: string;
-  email: string;
-  picture: string;
-}
+
 
 export const AuthButton = () => {
   
