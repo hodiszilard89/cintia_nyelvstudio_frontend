@@ -22,7 +22,7 @@ export const AuthButton = () => {
     const googleToken = credentialResponse.credential;
 
     try {
-      const response = await fetch('http://localhost:8080/api/auth/google', {
+      const response = await fetch('http://nyelviskola-env-2.eba-unsp3j22.eu-north-1.elasticbeanstalk.com/api/auth/google', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: googleToken }),

@@ -1049,6 +1049,7 @@ export const UnitPage = () => {
           </Box>
         )}
         {/* --- FOGALMAZÁS --- */}
+        
         {activeTab === 'essay' && (
           <EssayEditor {...essayLogic} />
         )}
