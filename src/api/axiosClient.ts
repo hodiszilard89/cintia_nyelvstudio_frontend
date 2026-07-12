@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const axiosClient = axios.create({
-    baseURL: 'http://localhost:8080/api',
+    baseURL: 'http://nyelviskola-env-2.eba-unsp3j22.eu-north-1.elasticbeanstalk.com/api',
     headers: {
         'Content-Type': 'application/json',
     },
