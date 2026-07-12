@@ -8,6 +8,7 @@ import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom'; // 👈 1. Importáld a navigációt
 import { useAuth } from '../AuthContext';
 
+import { useGoogleAuth } from '../../hooks/useGoogleAuth';
 
 
 export const AuthButton = () => {
@@ -18,29 +19,23 @@ export const AuthButton = () => {
   // 👈 Kérjük el a globális állapotkezelőtől a változókat és függvényeket!
   const { user, login, logout } = useAuth(); 
 
-  const handleLoginSuccess = async (credentialResponse: any) => {
-    const googleToken = credentialResponse.credential;
 
-    try {
-      const response = await fetch('http://nyelviskola-env-2.eba-unsp3j22.eu-north-1.elasticbeanstalk.com/api/auth/google', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: googleToken }),
-      });
+// A komponensen belül, a return előtt deklaráld:
+const { verifyToken } = useGoogleAuth();
 
-      if (response.ok) {
-        const decoded = jwtDecode<any>(googleToken); // Itt dekódoljuk a Google JSON-t
-        
-        login(decoded); // 👈 MOST MÁR LÉTEZIK! Beteszi a globális memóriába
-        
-        navigate('/home');
-      } else {
-        console.error("A backend visszautasította a tokent!");
-      }
-    } catch (error) {
-      console.error("Hiba:", error);
-    }
-  };
+const handleLoginSuccess = async (credentialResponse: any) => {
+  const googleToken = credentialResponse.credential;
+
+  try {
+    await verifyToken(googleToken); // A hálózati kérést átadtuk a hooknak
+    
+    const decoded = jwtDecode<any>(googleToken);
+    login(decoded);
+    navigate('/home');
+  } catch (err) {
+    console.error("A backend visszautasította a tokent vagy hiba történt!", err);
+  }
+};
 
   // Kijelentkezés
   const handleLogout = () => {
