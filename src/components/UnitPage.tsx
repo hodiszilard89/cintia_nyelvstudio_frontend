@@ -218,7 +218,7 @@ export const UnitPage = () => {
   // Ez a kód akkor fut le, amikor a diák/tanár belép az oldalra
   useEffect(() => {
     // 1. Létrehozzuk a kapcsolatot a Java szerverrel
-    const socket = new SockJS('http://localhost:8080/ws');
+    const socket = new SockJS(`${import.meta.env.VITE_API_BASE_URL}/ide-jon-a-vegpont-neve`);
     const client = new Client({
       webSocketFactory: () => socket,
       debug: (str) => console.log(str), // Kiírja a konzolra, ha sikerült csatlakozni
