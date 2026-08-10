@@ -361,7 +361,7 @@ export const UnitPage = () => {
   // --- 4. MEGJELENÍTÉS (UI) ---
   return (
     <Flex w="full" minH="calc(100vh - 200px)" color="white">
-
+      <h1>Az adatbázis 17:00 - 8:00 között kivan kapcsolva</h1>
       {/* --- BAL OLDALI MENÜ SÁV --- */}
       <Box w="280px" bg="blackAlpha.400" p={6} borderRight="1px solid" borderColor="whiteAlpha.300">
         <Button variant="link" color="whiteAlpha.600" fontSize="sm" fontWeight="normal" _hover={{ color: "pink", textDecoration: "none" }} mb={6} onClick={() => navigate('/home')}>
