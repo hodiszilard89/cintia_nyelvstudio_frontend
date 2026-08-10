@@ -19,6 +19,7 @@ export const Dashboard = () => {
     const navigate = useNavigate()
     return (
         <Box w="full" maxW="1200px" mx="auto" py={12} px={8}>
+            <h1>Az adatbázis 17:00 - 8:00 között kivan kapcsolva</h1>
             <VStack spacing={8} align="flex-start" mb={10}>
                 <Heading as="h2" size="xl" color="white">
                     A te tanulási utad
