@@ -10,7 +10,7 @@ import App from './App.tsx'
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     {/* Ide kerül a Google Cloud-ból kapott Client ID */}
-    <GoogleOAuthProvider clientId={import.meta.env.CLIENT_ID}>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_CLIENT_ID}>
       <ChakraProvider>
        <BrowserRouter> 
          <AuthProvider> {/* 👈 2. Ebbe csomagoljuk be az App-ot */}

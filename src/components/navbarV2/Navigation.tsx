@@ -1,9 +1,23 @@
 import { Box, HStack, Link } from '@chakra-ui/react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const menuItems = ['Főoldal', 'Rólunk','Árak','Tanfolyamok', 'Blog', 'Kapcsolat']; // Példa adatok
+interface MenuItem {
+  label: string;
+  path: string;
+}
+
+const menuItems: MenuItem[] = [
+  { label: 'Főoldal', path: '/' },
+  { label: 'Rólunk', path: '/rolunk' },
+  { label: 'Árak', path: '/arak' },
+  { label: 'Tanfolyamok', path: '/tanfolyamok' },
+  { label: 'Blog', path: '/blog' },
+  { label: 'Kapcsolat', path: '/kapcsolat' },
+];
 
 export const Navigation = () => {
+  const navigate = useNavigate();
   const [indicator, setIndicator] = useState({ left: 0, width: 0, opacity: 0 });
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -14,6 +28,7 @@ export const Navigation = () => {
   const handleMouseLeave = () => {
     setIndicator(prev => ({ ...prev, opacity: 0 }));
   };
+  console.log(import.meta.env.VITE_GOOGLE_CLIENT_ID);
 
   return (
     <Box position="relative" onMouseLeave={handleMouseLeave}>
@@ -21,20 +36,18 @@ export const Navigation = () => {
         {menuItems.map((item) => (
           <Link
             fontSize={"xl"}
-            key={item}
-            href="#"
+            key={item.path}
+            onClick={() => navigate(item.path)}
             onMouseEnter={handleMouseEnter}
             pb={2}
             textDecoration="none"
             _hover={{
               color: 'white',
               textDecoration: 'none',
-              // Ha a mozgó alsó csíkot használod (az abszolút pozíciós Box-ot lejjebb), 
-              // ezt az _after-t érdemes lehet kivenni, nehogy két vonal jelenjen meg egyszerre!
               _after: { width: '100%' } 
             }}
           >
-            {item}
+            {item.label}
           </Link>
         ))}
       </HStack>
